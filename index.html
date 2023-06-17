@@ -1,0 +1,153 @@
+<style>
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.input-container label {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.input-container input {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.input-container button {
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.preview-container {
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 3px;
+  border-radius: 4px;
+  background-color: #fff;
+  padding: 16px;
+}
+
+.preview-container h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.preview-container .title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #1a0dab;
+}
+
+.preview-container .url {
+  font-size: 14px;
+  color: #006621;
+  margin-bottom: 4px;
+}
+
+.preview-container .description {
+  font-size: 16px;
+  color: #545454;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+ /* Add CSS to position the favicon image */
+ .preview-container .favicon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    position: relative;
+    top: 4px;
+  }
+
+.preview-container .spinner {
+  border: 16px solid #f3f3f3;
+  border-top: 16px solid #3498db;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+  display: none;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+</style>  
+
+<div class="input-container">
+    <label for="website-url">Enter Website URL:</label>
+    <input type="text" id="website-url">
+    <button id="submit-button">Submit</button>
+  </div>
+  
+  <div class="preview-container">
+    <h3>Snippet Preview</h3>
+    <div class="spinner"></div>
+    <img class="favicon" style="display: none;">
+    <div class="title" style="display: none;"></div>
+    <div class="url" style="display: none;"></div>
+    <div class="description" style="display: none;"></div>
+  </div>
+  
+  <script>
+    const websiteUrlInput = document.getElementById('website-url');
+    const submitButton = document.getElementById('submit-button');
+    const titleElement = document.querySelector('.title');
+    const urlElement = document.querySelector('.url');
+    const descriptionElement = document.querySelector('.description');
+    const spinnerElement = document.querySelector('.spinner');
+    const faviconElement = document.querySelector('.favicon');
+  
+    submitButton.addEventListener('click', () => {
+      const websiteUrl = websiteUrlInput.value;
+  
+      // Show the spinner and hide the title, URL, description, and favicon elements
+      spinnerElement.style.display = 'block';
+      titleElement.style.display = 'none';
+      urlElement.style.display = 'none';
+      descriptionElement.style.display = 'none';
+      faviconElement.style.display = 'none';
+  
+      // Use allorigins.win as a proxy to avoid CORS issues
+      const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(websiteUrl)}`;
+  
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          // Use DOMParser to parse the HTML response and extract the title, meta description, and favicon tags
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(data.contents, 'text/html');
+          const title = htmlDoc.querySelector('title').textContent;
+          const description = htmlDoc.querySelector('meta[name="description"]').getAttribute('content');
+          const faviconHref = htmlDoc.querySelector('link[rel="icon"]').getAttribute('href');
+  
+          // Hide the spinner and show the title, URL, description, and favicon elements
+          spinnerElement.style.display = 'none';
+          titleElement.style.display = 'block';
+          urlElement.style.display = 'block';
+          descriptionElement.style.display = 'block';
+          faviconElement.style.display = 'inline';
+  
+          // Set the title, URL, description, and favicon elements in the preview container
+          titleElement.textContent = title;
+          urlElement.textContent = websiteUrl;
+          descriptionElement.textContent = description;
+          faviconElement.setAttribute('src', faviconHref);
+        })
+        .catch(error => console.error(error));
+    });
+  </script>
